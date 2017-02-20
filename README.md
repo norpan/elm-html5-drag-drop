@@ -39,3 +39,6 @@ view =
    ...
    div (... ++ Html5.DragDrop.droppable DragDropMsg dropId) [...]
 ```
+
+## Example
+https://ellie-app.com/rzw6PH4QDha1/0
