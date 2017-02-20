@@ -162,8 +162,8 @@ droppable : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
 droppable wrap dropId =
     [ on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
     , on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
-    , on "drop" <| Json.succeed <| wrap <| Drop
-    , attribute "ondragover" "event.preventDefault()"
+    , onWithOptions "drop" { stopPropagation = True, preventDefault = True } <| Json.succeed <| wrap <| Drop
+    , attribute "ondragover" "event.stopPropagation(); event.preventDefault();"
     ]
 
 

@@ -89,7 +89,7 @@ viewDiv position data dropId =
                     []
             )
             (if data.position == position then
-                [ img (src "http://elm-lang.org/assets/logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
+                [ img (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
                 , text (toString data.count)
                 ]
              else
