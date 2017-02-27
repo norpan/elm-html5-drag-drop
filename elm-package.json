@@ -1,5 +1,5 @@
 {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "summary": "This library handles dragging and dropping using the HTML5 API",
     "repository": "https://github.com/norpan/elm-html5-drag-drop.git",
     "license": "BSD3",
