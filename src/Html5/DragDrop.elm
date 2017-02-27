@@ -73,7 +73,7 @@ type Msg dragId dropId
     | DragEnd
     | DragEnter dropId
     | DragLeave dropId
-    | Drop
+    | Drop dropId
 
 
 {-| The update function.
@@ -123,7 +123,10 @@ update msg model =
             else
                 ( model, Nothing )
 
-        ( Drop, DraggedOver dragId dropId ) ->
+        ( Drop dropId, Dragging dragId ) ->
+            ( NotDragging, Just ( dragId, dropId ) )
+
+        ( Drop dropId, DraggedOver dragId _ ) ->
             ( NotDragging, Just ( dragId, dropId ) )
 
         _ ->
@@ -162,7 +165,7 @@ droppable : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
 droppable wrap dropId =
     [ on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
     , on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
-    , onWithOptions "drop" { stopPropagation = True, preventDefault = True } <| Json.succeed <| wrap <| Drop
+    , onWithOptions "drop" { stopPropagation = True, preventDefault = True } <| Json.succeed <| wrap <| Drop dropId
     , attribute "ondragover" "event.stopPropagation(); event.preventDefault();"
     ]
 
