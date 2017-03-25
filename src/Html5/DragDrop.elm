@@ -148,6 +148,7 @@ draggable wrap drag =
     [ attribute "draggable" "true"
     , on "dragstart" <| Json.succeed <| wrap <| DragStart drag
     , on "dragend" <| Json.succeed <| wrap <| DragEnd
+    , attribute "ondragstart" "event.dataTransfer.setData('text/plain', '');"
     ]
 
 
