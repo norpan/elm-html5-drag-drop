@@ -1,4 +1,4 @@
-module Html5.DragDrop exposing (Model, init, Msg, update, draggable, droppable, getDragId, getDropId)
+module Html5.DragDrop exposing (Model, init, Msg, update, updateSticky, draggable, droppable, getDragId, getDropId)
 
 {-| This library handles dragging and dropping using the API
 from the HTML 5 recommendation at
@@ -18,7 +18,7 @@ Msg constructor used, and the update function will not send a result if a drop
 was made from another instance.
 
 # Model and update
-@docs Model, init, Msg, update
+@docs Model, init, Msg, update, updateSticky
 
 # View attributes
 @docs draggable, droppable
@@ -100,33 +100,53 @@ update msg model =
 ```
 -}
 update : Msg dragId dropId -> Model dragId dropId -> ( Model dragId dropId, Maybe ( dragId, dropId ) )
-update msg model =
-    case ( msg, model ) of
-        ( DragStart dragId, _ ) ->
+update =
+    updateCommon False
+
+
+{-| A "sticky" version of the `update` function.
+
+It's used the same way as the `update` function, but when you use this version,
+droppables are "sticky" so when you drag out of them and release the mouse button,
+a drop will still be registered at the last droppable. You should preferably
+provide some sort of indication (using `getDropId`) where the drop will take
+place if you use this function.
+-}
+updateSticky : Msg dragId dropId -> Model dragId dropId -> ( Model dragId dropId, Maybe ( dragId, dropId ) )
+updateSticky =
+    updateCommon True
+
+
+updateCommon sticky msg model =
+    case ( msg, model, sticky ) of
+        ( DragStart dragId, _, _ ) ->
             ( Dragging dragId, Nothing )
 
-        ( DragEnd, _ ) ->
+        ( DragEnd, DraggedOver dragId dropId, True ) ->
+            ( NotDragging, Just ( dragId, dropId ) )
+
+        ( DragEnd, _, _ ) ->
             ( NotDragging, Nothing )
 
-        ( DragEnter dropId, Dragging dragId ) ->
+        ( DragEnter dropId, Dragging dragId, _ ) ->
             ( DraggedOver dragId dropId, Nothing )
 
-        ( DragEnter dropId, DraggedOver dragId _ ) ->
+        ( DragEnter dropId, DraggedOver dragId _, _ ) ->
             ( DraggedOver dragId dropId, Nothing )
 
         -- Only handle DragLeave if it is for the current dropId.
         -- DragLeave and DragEnter sometimes come in the wrong order
         -- when two droppables are next to each other.
-        ( DragLeave dropId_, DraggedOver dragId dropId ) ->
+        ( DragLeave dropId_, DraggedOver dragId dropId, False ) ->
             if dropId_ == dropId then
                 ( Dragging dragId, Nothing )
             else
                 ( model, Nothing )
 
-        ( Drop dropId, Dragging dragId ) ->
+        ( Drop dropId, Dragging dragId, _ ) ->
             ( NotDragging, Just ( dragId, dropId ) )
 
-        ( Drop dropId, DraggedOver dragId _ ) ->
+        ( Drop dropId, DraggedOver dragId _, _ ) ->
             ( NotDragging, Just ( dragId, dropId ) )
 
         _ ->
