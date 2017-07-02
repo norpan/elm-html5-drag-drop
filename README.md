@@ -1,10 +1,13 @@
-# HTML 5 Drag and Drop API
+# HTML 5 Drag and Drop API for Style Elements
 This library handles dragging and dropping using the API
 from the HTML 5 recommendation at
 https://www.w3.org/TR/html/editing.html#drag-and-drop.
 
 It provides attributes and a model/update to handle
 dragging and dropping between your elements.
+
+This is a straight port of https://github.com/norpan/elm-html5-drag-drop to
+support the [Style Elements](http://package.elm-lang.org/packages/mdgriffith/style-elements/latest)
 
 ## Usage
 ```elm
@@ -35,10 +38,8 @@ update msg model =
 
 view =
    ...
-   div (... ++ Html5.DragDrop.draggable DragDropMsg dragId) [...]
+   el (... ++ Html5.DragDrop.draggableElement DragDropMsg dragId) (...)
    ...
-   div (... ++ Html5.DragDrop.droppable DragDropMsg dropId) [...]
+   row (... ++ Html5.DragDrop.droppableElement DragDropMsg dropId) [...]
 ```
 
-## Example
-https://ellie-app.com/rP5HtD5Mvya1/0

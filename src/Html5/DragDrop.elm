@@ -1,8 +1,8 @@
-module Html5.DragDrop exposing (Model, init, Msg, update, updateSticky, draggable, droppable, getDragId, getDropId)
+module Html5.DragDrop exposing (Model, init, Msg, update, updateSticky, draggable, draggableElement, droppable, droppableElement, getDragId, getDropId)
 
 {-| This library handles dragging and dropping using the API
 from the HTML 5 recommendation at
-https://www.w3.org/TR/html/editing.html#drag-and-drop.
+<https://www.w3.org/TR/html/editing.html#drag-and-drop>.
 
 It provides attributes and a model/update to handle
 dragging and dropping between your elements.
@@ -17,31 +17,41 @@ interfere with each other. Drag and drop are connected to an instance by the
 Msg constructor used, and the update function will not send a result if a drop
 was made from another instance.
 
+
 # Model and update
+
 @docs Model, init, Msg, update, updateSticky
 
+
 # View attributes
+
 @docs draggable, droppable
 
+
 # Status functions
+
 @docs getDragId, getDropId
+
 -}
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Json
+import Element
+import Element.Attributes
+import Element.Events
 
 
 {-| The drag and drop state.
 
 This should be placed inside your application's model like this:
-```elm
-type alias Model =
-    { ...
-    , dragDrop : Html5.DragDrop.Model DragId DropId
-    }
-```
+
+    type alias Model =
+        { ...
+        , dragDrop : Html5.DragDrop.Model DragId DropId
+        }
+
 -}
 type Model dragId dropId
     = NotDragging
@@ -52,6 +62,7 @@ type Model dragId dropId
 {-| The initial drag and drop state.
 
 You should use this as the initital value for the drag and drop state in your model.
+
 -}
 init : Model dragId dropId
 init =
@@ -61,11 +72,10 @@ init =
 {-| The drag and drop messages.
 
 This should be placed inside your application's messages like this:
-```elm
-type Msg
-    = ...
-    | DragDropMsg (Html5.DragDrop.Msg DragId DropId)
-```
+
+    type Msg
+        = ...
+        | DragDropMsg (Html5.DragDrop.Msg DragId DropId)
 
 -}
 type Msg dragId dropId
@@ -84,20 +94,20 @@ consisting of the `dragId` and `dropId` that was specified in the
 calls for the corresponding nodes.
 
 This should be placed inside your application's update function, like this:
-```elm
-update msg model =
-    case msg of
-        ...
-        DragDropMsg msg_ ->
-            let
-                ( model_, result ) =
-                    Html5.DragDrop.update msg_ model.dragDrop
-            in
-                { model
-                    | dragDrop = model_
-                    , ...use result if available...
-                }
-```
+
+    update msg model =
+        case msg of
+            ...
+            DragDropMsg msg_ ->
+                let
+                    ( model_, result ) =
+                        Html5.DragDrop.update msg_ model.dragDrop
+                in
+                    { model
+                        | dragDrop = model_
+                        , ...use result if available...
+                    }
+
 -}
 update : Msg dragId dropId -> Model dragId dropId -> ( Model dragId dropId, Maybe ( dragId, dropId ) )
 update =
@@ -111,6 +121,7 @@ droppables are "sticky" so when you drag out of them and release the mouse butto
 a drop will still be registered at the last droppable. You should preferably
 provide some sort of indication (using `getDropId`) where the drop will take
 place if you use this function.
+
 -}
 updateSticky : Msg dragId dropId -> Model dragId dropId -> ( Model dragId dropId, Maybe ( dragId, dropId ) )
 updateSticky =
@@ -157,11 +168,11 @@ updateCommon sticky msg model =
 
 The node you put these attributes on will be draggable with the `dragId` you provide.
 It should be used like this:
-```elm
-view =
-   ...
-   div (... ++ Html5.DragDrop.draggable DragDropMsg dragId) [...]
-```
+
+    view =
+       ...
+       div (... ++ Html5.DragDrop.draggable DragDropMsg dragId) [...]
+
 -}
 draggable : (Msg dragId dropId -> msg) -> dragId -> List (Attribute msg)
 draggable wrap drag =
@@ -172,15 +183,34 @@ draggable wrap drag =
     ]
 
 
+{-| Attributes to make a style element draggable.
+
+The style element you put these attributes on will be draggable with the `dragId` you provide.
+It should be used like this:
+
+    view =
+       ...
+       el (... ++ Html5.DragDrop.draggableElement DragDropMsg dragId) (...)
+
+-}
+draggableElement : (Msg dragId dropId -> msg) -> dragId -> List (Element.Attribute variation msg)
+draggableElement wrap drag =
+    [ Element.Attributes.attribute "draggable" "true"
+    , Element.Events.on "dragstart" <| Json.succeed <| wrap <| DragStart drag
+    , Element.Events.on "dragend" <| Json.succeed <| wrap <| DragEnd
+    , Element.Attributes.attribute "ondragstart" "event.dataTransfer.setData('text/plain', '');"
+    ]
+
+
 {-| Droppable attributes for your view function.
 
 The node you put these attributes on will be droppable with the `dropId` you provide.
 It should be used like this:
-```elm
-view =
-   ...
-   div (... ++ Html5.DragDrop.droppable DragDropMsg dropId) [...]
-```
+
+    view =
+       ...
+       div (... ++ Html5.DragDrop.droppable DragDropMsg dropId) [...]
+
 -}
 droppable : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
 droppable wrap dropId =
@@ -191,9 +221,29 @@ droppable wrap dropId =
     ]
 
 
+{-| Droppable attributes for your style elements function.
+
+The style element you put these attributes on will be a drop target with the `dropId` you provide.
+It should be used like this:
+
+    view =
+       ...
+       row (... ++ Html5.DragDrop.droppableElement DragDropMsg dropId) [...]
+
+-}
+droppableElement : (Msg dragId dropId -> msg) -> dropId -> List (Element.Attribute variation msg)
+droppableElement wrap dropId =
+    [ Element.Events.on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
+    , Element.Events.on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
+    , Element.Events.onWithOptions "drop" { stopPropagation = True, preventDefault = True } <| Json.succeed <| wrap <| Drop dropId
+    , Element.Attributes.attribute "ondragover" "event.stopPropagation(); event.preventDefault();"
+    ]
+
+
 {-| Get the current `dragId` if available.
 
 This function can be used for instance to hide the draggable when dragging.
+
 -}
 getDragId : Model dragId dropId -> Maybe dragId
 getDragId model =
@@ -211,6 +261,7 @@ getDragId model =
 {-| Get the current `dropId` if available.
 
 This function can be used for instance to highlight the droppable when dragging over it.
+
 -}
 getDropId : Model dragId dropId -> Maybe dropId
 getDropId model =
