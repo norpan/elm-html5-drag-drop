@@ -6,7 +6,10 @@ https://www.w3.org/TR/html/editing.html#drag-and-drop.
 It provides attributes and a model/update to handle
 dragging and dropping between your elements.
 
-## Usage
+To use on mobile, you can include the following polyfill:
+https://github.com/Bernardo-Castilho/dragdroptouch
+
+## Basic usage
 ```elm
 type alias Model =
     { ...
@@ -41,4 +44,4 @@ view =
 ```
 
 ## Example
-https://ellie-app.com/rP5HtD5Mvya1/0
+https://ellie-app.com/rrrGb7Z6Ra1/1

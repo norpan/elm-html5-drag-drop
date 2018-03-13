@@ -34,17 +34,17 @@ update msg model =
                 ( model_, result ) =
                     DragDrop.update msg_ model.dragDrop
             in
-                { model
-                    | dragDrop = model_
-                    , data =
-                        case result of
-                            Nothing ->
-                                model.data
+            { model
+                | dragDrop = model_
+                , data =
+                    case result of
+                        Nothing ->
+                            model.data
 
-                            Just ( count, position ) ->
-                                { count = count + 1, position = position }
-                }
-                    ! []
+                        Just ( count, position, _ ) ->
+                            { count = count + 1, position = position }
+            }
+                ! []
 
 
 divStyle =
@@ -55,12 +55,15 @@ view model =
     let
         dropId =
             DragDrop.getDropId model.dragDrop
+
+        position =
+            DragDrop.getDroppablePosition model.dragDrop
     in
-        div []
-            [ viewDiv Up model.data dropId
-            , viewDiv Middle model.data dropId
-            , viewDiv Down model.data dropId
-            ]
+    div []
+        [ viewDiv Up model.data dropId position
+        , viewDiv Middle model.data dropId position
+        , viewDiv Down model.data dropId position
+        ]
 
 
 isNothing maybe =
@@ -72,29 +75,38 @@ isNothing maybe =
             True
 
 
-viewDiv position data dropId =
+viewDiv position data dropId droppablePosition =
     let
         highlight =
             if dropId |> Maybe.map ((==) position) |> Maybe.withDefault False then
-                [ style [ ( "background-color", "cyan" ) ] ]
+                case droppablePosition of
+                    Nothing ->
+                        []
+
+                    Just pos ->
+                        if pos.y < pos.height // 2 then
+                            [ style [ ( "background-color", "cyan" ) ] ]
+                        else
+                            [ style [ ( "background-color", "magenta" ) ] ]
             else
                 []
     in
-        div
-            (divStyle
-                :: highlight
-                ++ if data.position /= position then
+    div
+        (divStyle
+            :: highlight
+            ++ (if data.position /= position then
                     DragDrop.droppable DragDropMsg position
-                   else
+                else
                     []
-            )
-            (if data.position == position then
-                [ img (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
-                , text (toString data.count)
-                ]
-             else
-                []
-            )
+               )
+        )
+        (if data.position == position then
+            [ img (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
+            , text (toString data.count)
+            ]
+         else
+            []
+        )
 
 
 main =
