@@ -1,4 +1,9 @@
 # HTML 5 Drag and Drop API
+
+First, a word of warning. This package uses a technique known as event handler content attributes, which is part of the HTML standard. However, this functionality may be removed from Elm, see https://github.com/elm-lang/html/issues/56.
+
+So, use this package with this in mind.
+
 This library handles dragging and dropping using the API
 from the HTML 5 recommendation at
 https://www.w3.org/TR/html/editing.html#drag-and-drop.
