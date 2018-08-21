@@ -1,5 +1,6 @@
 module Example exposing (..)
 
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html5.DragDrop as DragDrop
@@ -21,7 +22,7 @@ type Msg
     = DragDropMsg (DragDrop.Msg Int Position)
 
 
-model =
+init =
     { data = { count = 0, position = Up }
     , dragDrop = DragDrop.init
     }
@@ -44,11 +45,13 @@ update msg model =
                         Just ( count, position, _ ) ->
                             { count = count + 1, position = position }
             }
-                ! []
 
 
 divStyle =
-    style [ ( "border", "1px solid black" ), ( "padding", "50px" ), ( "text-align", "center" ) ]
+    [ style "border" "1px solid black"
+    , style "padding" "50px"
+    , style "text-align" "center"
+    ]
 
 
 view model =
@@ -85,15 +88,15 @@ viewDiv position data dropId droppablePosition =
 
                     Just pos ->
                         if pos.y < pos.height // 2 then
-                            [ style [ ( "background-color", "cyan" ) ] ]
+                            [ style "background-color" "cyan" ]
                         else
-                            [ style [ ( "background-color", "magenta" ) ] ]
+                            [ style "background-color" "magenta" ]
             else
                 []
     in
     div
         (divStyle
-            :: highlight
+            ++ highlight
             ++ (if data.position /= position then
                     DragDrop.droppable DragDropMsg position
                 else
@@ -102,7 +105,7 @@ viewDiv position data dropId droppablePosition =
         )
         (if data.position == position then
             [ img (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
-            , text (toString data.count)
+            , text (String.fromInt data.count)
             ]
          else
             []
@@ -110,9 +113,8 @@ viewDiv position data dropId droppablePosition =
 
 
 main =
-    program
-        { init = ( model, Cmd.none )
+    Browser.sandbox
+        { init = init
         , update = update
         , view = view
-        , subscriptions = always Sub.none
         }
