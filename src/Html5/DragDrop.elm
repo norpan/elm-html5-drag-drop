@@ -1,4 +1,4 @@
-module Html5.DragDrop exposing (Model, Msg, Position, draggable, droppable, droppableWithPosition, getDragId, getDropId, getDroppablePosition, init, update, updateSticky)
+module Html5.DragDrop exposing (Model, Msg, Position, draggable, droppable, getDragId, getDropId, getDroppablePosition, init, update, updateSticky)
 
 {-| This library handles dragging and dropping using the API
 from the HTML 5 recommendation at
@@ -28,7 +28,7 @@ To use on mobile, you can include the following polyfill:
 
 # View attributes
 
-@docs draggable, droppable, droppableWithPosition
+@docs draggable, droppable
 
 
 # Status functions
@@ -211,7 +211,6 @@ draggable wrap drag =
     [ attribute "draggable" "true"
     , on "dragstart" <| Json.succeed <| wrap <| DragStart drag
     , on "dragend" <| Json.succeed <| wrap <| DragEnd
-    , attribute "ondragstart" "event.dataTransfer.setData('text/plain', '');"
     ]
 
 
@@ -227,24 +226,6 @@ It should be used like this:
 -}
 droppable : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
 droppable wrap dropId =
-    [ on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
-    , on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
-    , onWithOptions "drop" { stopPropagation = True, preventDefault = True } <| Json.map (wrap << Drop dropId) positionDecoder
-    , attribute "ondragover" "event.stopPropagation(); event.preventDefault();"
-    ]
-
-
-{-| Attributes to make a node droppable and keep track of the position within it while dragging.
-
-Used the same way as the [`droppable`](#droppable) function.
-
-The node you put these attributes on will be droppable with the `dropId` you provide. It will also keep track of the
-position and the size of the droppable element when dragging over it, which you can access using the [`getDroppablePosition`](#getDroppablePosition)
-function. The drawback of using this is that a lot of messages will be sent when dragging over a droppable.
-
--}
-droppableWithPosition : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
-droppableWithPosition wrap dropId =
     [ on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
     , on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
     , onWithOptions "dragover" { stopPropagation = True, preventDefault = True } <| Json.map (wrap << DragOver dropId) positionDecoder
@@ -297,8 +278,7 @@ getDropId model =
             Just dropId
 
 
-{-| Get the current `Position` when dragging over the droppable, if available.
-The position is only available if you have specified `droppableWithPosition` on your droppable.
+{-| Get the current `Position` when dragging over the droppable.
 -}
 getDroppablePosition : Model dragId dropId -> Maybe Position
 getDroppablePosition model =
@@ -308,3 +288,19 @@ getDroppablePosition model =
 
         _ ->
             Nothing
+
+
+{-| polyfill for onWithOptions
+-}
+onWithOptions :
+    String
+    ->
+        { stopPropagation : Bool
+        , preventDefault : Bool
+        }
+    -> Json.Decoder msg
+    -> Attribute msg
+onWithOptions name { stopPropagation, preventDefault } decoder =
+    decoder
+        |> Json.map (\msg -> { message = msg, stopPropagation = stopPropagation, preventDefault = preventDefault })
+        |> custom name
