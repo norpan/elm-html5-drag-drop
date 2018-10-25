@@ -228,8 +228,8 @@ droppable : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
 droppable wrap dropId =
     [ on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
     , on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
-    , onWithOptions "dragover" { stopPropagation = True, preventDefault = True } <| Json.map (wrap << DragOver dropId) positionDecoder
-    , onWithOptions "drop" { stopPropagation = True, preventDefault = True } <| Json.map (wrap << Drop dropId) positionDecoder
+    , onWithOptions "dragover" { stopPropagation = False, preventDefault = True } <| Json.map (wrap << DragOver dropId) positionDecoder
+    , onWithOptions "drop" { stopPropagation = False, preventDefault = True } <| Json.map (wrap << Drop dropId) positionDecoder
     ]
 
 
