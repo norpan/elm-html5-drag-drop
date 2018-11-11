@@ -1,4 +1,8 @@
-module Html5.DragDrop exposing (Model, Msg, Position, draggable, droppable, getDragId, getDropId, getDroppablePosition, init, update, updateSticky)
+module Html5.DragDrop exposing
+    ( Model, init, Msg, Position, update, updateSticky
+    , draggable, droppable
+    , getDragId, getDropId, getDroppablePosition
+    )
 
 {-| This library handles dragging and dropping using the API
 from the HTML 5 recommendation at
@@ -172,6 +176,7 @@ updateCommon sticky msg model =
         ( DragLeave dropId_, DraggedOver dragId dropId _, False ) ->
             if dropId_ == dropId then
                 ( Dragging dragId, Nothing )
+
             else
                 ( model, Nothing )
 
@@ -182,6 +187,7 @@ updateCommon sticky msg model =
             if Just pos == currentPos && dropId == currentDropId then
                 -- Don't change model if coordinates have not changed
                 ( model, Nothing )
+
             else
                 -- Update coordinates
                 ( DraggedOver dragId dropId (Just pos), Nothing )
@@ -209,8 +215,8 @@ It should be used like this:
 draggable : (Msg dragId dropId -> msg) -> dragId -> List (Attribute msg)
 draggable wrap drag =
     [ attribute "draggable" "true"
-    , on "dragstart" <| Json.succeed <| wrap <| DragStart drag
-    , on "dragend" <| Json.succeed <| wrap <| DragEnd
+    , onWithOptions "dragstart" { stopPropagation = True, preventDefault = False } <| Json.succeed <| wrap <| DragStart drag
+    , onWithOptions "dragend" { stopPropagation = True, preventDefault = False } <| Json.succeed <| wrap <| DragEnd
     ]
 
 
