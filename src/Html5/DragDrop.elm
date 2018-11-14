@@ -65,7 +65,7 @@ type Model dragId dropId
 
 {-| The position inside a droppable. Contains the droppable's
 width and height, as well as the current x and y position,
-using the `target.clientWidth`, `target.clientHeight`, `offsetX`, and `offsetY`
+using the `currentTarget.clientWidth`, `currentTarget.clientHeight`, `offsetX`, and `offsetY`
 from the `ondragover` event.
 
 Note, that in some cases, x and y may be negative, or larger than the clientWidth and height,
@@ -242,8 +242,8 @@ droppable wrap dropId =
 positionDecoder : Json.Decoder Position
 positionDecoder =
     Json.map4 Position
-        (Json.at [ "target", "clientWidth" ] Json.int)
-        (Json.at [ "target", "clientHeight" ] Json.int)
+        (Json.at [ "currentTarget", "clientWidth" ] Json.int)
+        (Json.at [ "currentTarget", "clientHeight" ] Json.int)
         (Json.at [ "offsetX" ] Json.int)
         (Json.at [ "offsetY" ] Json.int)
 
