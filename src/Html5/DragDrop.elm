@@ -2,6 +2,7 @@ module Html5.DragDrop exposing
     ( Model, init, Msg, Position, update, updateSticky
     , draggable, droppable
     , getDragId, getDropId, getDroppablePosition
+    , getDragstartEvent
     )
 
 {-| This library handles dragging and dropping using the API
@@ -24,6 +25,10 @@ was made from another instance.
 To use on mobile, you can include the following polyfill:
 <https://github.com/Bernardo-Castilho/dragdroptouch>
 
+Note that drag and drop _does not_ work out of the box in Firefox.
+See the example folder in github for an example that uses ports
+to do `event.dataTransfer.setData('text', '')`. to fix this.
+
 
 # Model and update
 
@@ -38,6 +43,11 @@ To use on mobile, you can include the following polyfill:
 # Status functions
 
 @docs getDragId, getDropId, getDroppablePosition
+
+
+# Javascript interop
+
+@docs getDragstartEvent
 
 -}
 
@@ -100,7 +110,7 @@ This should be placed inside your application's messages like this:
 
 -}
 type Msg dragId dropId
-    = DragStart dragId
+    = DragStart dragId Json.Value
     | DragEnd
     | DragEnter dropId
     | DragLeave dropId
@@ -158,7 +168,7 @@ updateCommon :
     -> ( Model dragId dropId, Maybe ( dragId, dropId, Position ) )
 updateCommon sticky msg model =
     case ( msg, model, sticky ) of
-        ( DragStart dragId, _, _ ) ->
+        ( DragStart dragId _, _, _ ) ->
             ( Dragging dragId, Nothing )
 
         ( DragEnd, _, _ ) ->
@@ -215,7 +225,7 @@ It should be used like this:
 draggable : (Msg dragId dropId -> msg) -> dragId -> List (Attribute msg)
 draggable wrap drag =
     [ attribute "draggable" "true"
-    , onWithOptions "dragstart" { stopPropagation = True, preventDefault = False } <| Json.succeed <| wrap <| DragStart drag
+    , onWithOptions "dragstart" { stopPropagation = True, preventDefault = False } <| Json.map (wrap << DragStart drag) Json.value
     , onWithOptions "dragend" { stopPropagation = True, preventDefault = False } <| Json.succeed <| wrap <| DragEnd
     ]
 
@@ -291,6 +301,24 @@ getDroppablePosition model =
     case model of
         DraggedOver _ _ pos ->
             pos
+
+        _ ->
+            Nothing
+
+
+{-| Get the `dragstart` event `Value` so that you can pass it to a port.
+This is useful to fix Firefox behaviour. See the example directory in github
+for how you can do that.
+
+You can also use the event to do other things from Javascript,
+such as setting the drag image.
+
+-}
+getDragstartEvent : Msg dragId dropId -> Maybe { dragId : dragId, event : Json.Value }
+getDragstartEvent msg =
+    case msg of
+        DragStart dragId event ->
+            Just { dragId = dragId, event = event }
 
         _ ->
             Nothing

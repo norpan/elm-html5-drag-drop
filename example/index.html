@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Main</title>
+  <link rel="stylesheet" href="whatever-you-want.css">
+  <script src="main.js"></script>
+</head>
+
+<body>
+  <div id="elm"></div>
+  <script>
+  var app = Elm.Example.init({
+    node: document.getElementById('elm')
+  });
+  app.ports.dragstart.subscribe(function (event) {
+    event.dataTransfer.setData('text', '');
+  });
+  </script>
+</body>
+</html>

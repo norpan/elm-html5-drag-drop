@@ -1,9 +1,13 @@
-module Example exposing (..)
+port module Example exposing (Model, Msg(..), Position(..), divStyle, init, isNothing, main, update, view, viewDiv)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html5.DragDrop as DragDrop
+import Json.Decode exposing (Value)
+
+
+port dragstart : Value -> Cmd msg
 
 
 type Position
@@ -22,10 +26,12 @@ type Msg
     = DragDropMsg (DragDrop.Msg Int Position)
 
 
-init =
-    { data = { count = 0, position = Up }
-    , dragDrop = DragDrop.init
-    }
+init () =
+    ( { data = { count = 0, position = Up }
+      , dragDrop = DragDrop.init
+      }
+    , Cmd.none
+    )
 
 
 update msg model =
@@ -35,7 +41,7 @@ update msg model =
                 ( model_, result ) =
                     DragDrop.update msg_ model.dragDrop
             in
-            { model
+            ( { model
                 | dragDrop = model_
                 , data =
                     case result of
@@ -44,7 +50,15 @@ update msg model =
 
                         Just ( count, position, _ ) ->
                             { count = count + 1, position = position }
-            }
+              }
+            , DragDrop.getDragstartEvent msg_
+                |> Maybe.map (.event >> dragstart)
+                |> Maybe.withDefault Cmd.none
+            )
+
+
+subscriptions model =
+    Sub.none
 
 
 divStyle =
@@ -89,8 +103,10 @@ viewDiv position data dropId droppablePosition =
                     Just pos ->
                         if pos.y < pos.height // 2 then
                             [ style "background-color" "cyan" ]
+
                         else
                             [ style "background-color" "magenta" ]
+
             else
                 []
     in
@@ -99,6 +115,7 @@ viewDiv position data dropId droppablePosition =
             ++ highlight
             ++ (if data.position /= position then
                     DragDrop.droppable DragDropMsg position
+
                 else
                     []
                )
@@ -107,14 +124,16 @@ viewDiv position data dropId droppablePosition =
             [ img (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
             , text (String.fromInt data.count)
             ]
+
          else
             []
         )
 
 
 main =
-    Browser.sandbox
+    Browser.element
         { init = init
         , update = update
+        , subscriptions = subscriptions
         , view = view
         }
