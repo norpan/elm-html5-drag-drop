@@ -70,7 +70,7 @@ This should be placed inside your application's model like this:
 type Model dragId dropId
     = NotDragging
     | Dragging dragId
-    | DraggedOver dragId dropId (Maybe Position)
+    | DraggedOver dragId dropId Int (Maybe Position)
 
 
 {-| The position inside a droppable. Contains the droppable's
@@ -114,7 +114,7 @@ type Msg dragId dropId
     | DragEnd
     | DragEnter dropId
     | DragLeave dropId
-    | DragOver dropId Position
+    | DragOver dropId Int Position
     | Drop dropId Position
 
 
@@ -175,37 +175,43 @@ updateCommon sticky msg model =
             ( NotDragging, Nothing )
 
         ( DragEnter dropId, Dragging dragId, _ ) ->
-            ( DraggedOver dragId dropId Nothing, Nothing )
+            ( DraggedOver dragId dropId 0 Nothing, Nothing )
 
-        ( DragEnter dropId, DraggedOver dragId _ pos, _ ) ->
-            ( DraggedOver dragId dropId pos, Nothing )
+        ( DragEnter dropId, DraggedOver dragId _ _ pos, _ ) ->
+            ( DraggedOver dragId dropId 0 pos, Nothing )
 
         -- Only handle DragLeave if it is for the current dropId.
         -- DragLeave and DragEnter sometimes come in the wrong order
         -- when two droppables are next to each other.
-        ( DragLeave dropId_, DraggedOver dragId dropId _, False ) ->
+        ( DragLeave dropId_, DraggedOver dragId dropId _ _, False ) ->
             if dropId_ == dropId then
                 ( Dragging dragId, Nothing )
 
             else
                 ( model, Nothing )
 
-        ( DragOver dropId pos, Dragging dragId, _ ) ->
-            ( DraggedOver dragId dropId (Just pos), Nothing )
+        ( DragOver dropId timeStamp pos, Dragging dragId, _ ) ->
+            ( DraggedOver dragId dropId timeStamp (Just pos), Nothing )
 
-        ( DragOver dropId pos, DraggedOver dragId currentDropId currentPos, _ ) ->
-            if Just pos == currentPos && dropId == currentDropId then
+        ( DragOver dropId timeStamp pos, DraggedOver dragId currentDropId currentTimeStamp currentPos, _ ) ->
+            if timeStamp == currentTimeStamp then
+                -- Handle dragover bubbling, if we already have handled this event
+                -- (by looking at the timeStamp), do nothing. Also, this does some rate limiting
+                -- if multiple events occur in the same time stamp.
+                ( model, Nothing )
+
+            else if Just pos == currentPos && dropId == currentDropId then
                 -- Don't change model if coordinates have not changed
                 ( model, Nothing )
 
             else
                 -- Update coordinates
-                ( DraggedOver dragId dropId (Just pos), Nothing )
+                ( DraggedOver dragId dropId timeStamp (Just pos), Nothing )
 
         ( Drop dropId pos, Dragging dragId, _ ) ->
             ( NotDragging, Just ( dragId, dropId, pos ) )
 
-        ( Drop dropId pos, DraggedOver dragId _ _, _ ) ->
+        ( Drop dropId pos, DraggedOver dragId _ _ _, _ ) ->
             ( NotDragging, Just ( dragId, dropId, pos ) )
 
         _ ->
@@ -239,14 +245,25 @@ It should be used like this:
        ...
        div (... ++ Html5.DragDrop.droppable DragDropMsg dropId) [...]
 
+Note that for efficiency reasons, the `dragover` event is being propagated,
+so if you have a droppable inside another droppable you will get
+
 -}
 droppable : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
 droppable wrap dropId =
     [ on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
     , on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
-    , onWithOptions "dragover" { stopPropagation = False, preventDefault = True } <| Json.map (wrap << DragOver dropId) positionDecoder
-    , onWithOptions "drop" { stopPropagation = False, preventDefault = True } <| Json.map (wrap << Drop dropId) positionDecoder
+
+    -- We don't stop propagation for dragover events because this will trigger redraw,
+    -- and we get a lot of dragover events.
+    , onWithOptions "dragover" { stopPropagation = False, preventDefault = True } <| Json.map wrap <| Json.map2 (DragOver dropId) timeStampDecoder positionDecoder
+    , onWithOptions "drop" { stopPropagation = True, preventDefault = True } <| Json.map (wrap << Drop dropId) positionDecoder
     ]
+
+
+timeStampDecoder : Json.Decoder Int
+timeStampDecoder =
+    Json.at [ "timeStamp" ] Json.int
 
 
 positionDecoder : Json.Decoder Position
@@ -272,7 +289,7 @@ getDragId model =
         Dragging dragId ->
             Just dragId
 
-        DraggedOver dragId dropId _ ->
+        DraggedOver dragId dropId _ _ ->
             Just dragId
 
 
@@ -290,7 +307,7 @@ getDropId model =
         Dragging dragId ->
             Nothing
 
-        DraggedOver dragId dropId _ ->
+        DraggedOver dragId dropId _ _ ->
             Just dropId
 
 
@@ -299,7 +316,7 @@ getDropId model =
 getDroppablePosition : Model dragId dropId -> Maybe Position
 getDroppablePosition model =
     case model of
-        DraggedOver _ _ pos ->
+        DraggedOver _ _ _ pos ->
             pos
 
         _ ->

@@ -4,11 +4,11 @@ This library handles dragging and dropping using the API
 from the HTML 5 recommendation at
 https://www.w3.org/TR/html/editing.html#drag-and-drop.
 
-It provides attributes and a model/update to handle
-dragging and dropping between your elements.
+It provides view attributes to make elements draggable and
+droppable and a model/update to keep track of what is being
+dragged and the drop target and position within it.
 
-To use on mobile, you can include the following polyfill:
-https://github.com/Bernardo-Castilho/dragdroptouch
+See the [`Html5.DragDrop`](Html5-DragDrop) module for more details.
 
 ## Basic usage
 ```elm
@@ -45,4 +45,4 @@ view =
 ```
 
 ## Example
-https://github.com/norpan/elm-html5-drag-drop/blob/master/Example.elm
+https://github.com/norpan/elm-html5-drag-drop/blob/master/example/Example.elm

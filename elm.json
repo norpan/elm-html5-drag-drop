@@ -3,7 +3,7 @@
     "name": "norpan/elm-html5-drag-drop",
     "summary": "This library handles dragging and dropping using the HTML5 API",
     "license": "BSD-3-Clause",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "exposed-modules": [
         "Html5.DragDrop"
     ],
