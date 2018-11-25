@@ -245,14 +245,11 @@ It should be used like this:
        ...
        div (... ++ Html5.DragDrop.droppable DragDropMsg dropId) [...]
 
-Note that for efficiency reasons, the `dragover` event is being propagated,
-so if you have a droppable inside another droppable you will get
-
 -}
 droppable : (Msg dragId dropId -> msg) -> dropId -> List (Attribute msg)
 droppable wrap dropId =
-    [ on "dragenter" <| Json.succeed <| wrap <| DragEnter dropId
-    , on "dragleave" <| Json.succeed <| wrap <| DragLeave dropId
+    [ onWithOptions "dragenter" { stopPropagation = True, preventDefault = True } <| Json.succeed <| wrap <| DragEnter dropId
+    , onWithOptions "dragleave" { stopPropagation = True, preventDefault = True } <| Json.succeed <| wrap <| DragLeave dropId
 
     -- We don't stop propagation for dragover events because this will trigger redraw,
     -- and we get a lot of dragover events.
@@ -271,8 +268,8 @@ positionDecoder =
     Json.map4 Position
         (Json.at [ "currentTarget", "clientWidth" ] Json.int)
         (Json.at [ "currentTarget", "clientHeight" ] Json.int)
-        (Json.at [ "offsetX" ] Json.int)
-        (Json.at [ "offsetY" ] Json.int)
+        (Json.at [ "offsetX" ] Json.float |> Json.map round)
+        (Json.at [ "offsetY" ] Json.float |> Json.map round)
 
 
 {-| Get the current `dragId` if available.
@@ -296,6 +293,10 @@ getDragId model =
 {-| Get the current `dropId` if available.
 
 This function can be used for instance to highlight the droppable when dragging over it.
+
+Note that for efficiency reasons, the `dragover` event is being propagated,
+so if you have a droppable inside another droppable you could get the wrong info
+from `getDropId`. The package tries to ignore the extra events, but it may fail.
 
 -}
 getDropId : Model dragId dropId -> Maybe dropId
