@@ -260,7 +260,7 @@ droppable wrap dropId =
 
 timeStampDecoder : Json.Decoder Int
 timeStampDecoder =
-    Json.at [ "timeStamp" ] Json.int
+    Json.at [ "timeStamp" ] Json.float |> Json.map round
 
 
 positionDecoder : Json.Decoder Position
