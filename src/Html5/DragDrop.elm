@@ -1,5 +1,5 @@
 module Html5.DragDrop exposing
-    ( Model, init, Msg, Position, update, updateSticky
+    ( Model(..), init, Msg(..), Position, update, updateSticky
     , draggable, droppable
     , getDragId, getDropId, getDroppablePosition
     , getDragstartEvent
