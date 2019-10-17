@@ -200,10 +200,6 @@ updateCommon sticky msg model =
                 -- if multiple events occur in the same time stamp.
                 ( model, Nothing )
 
-            else if Just pos == currentPos && dropId == currentDropId then
-                -- Don't change model if coordinates have not changed
-                ( model, Nothing )
-
             else
                 -- Update coordinates
                 ( DraggedOver dragId dropId timeStamp (Just pos), Nothing )
