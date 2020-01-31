@@ -44,5 +44,10 @@ view =
    div (... ++ Html5.DragDrop.droppable DragDropMsg dropId) [...]
 ```
 
+## Ellie Example:
+
+You can try out the sample code right here: https://ellie-app.com/7TTxFRNPDGJa1
+
 ## Example
+
 https://github.com/norpan/elm-html5-drag-drop/blob/master/example/Example.elm
