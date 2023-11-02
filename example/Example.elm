@@ -72,7 +72,7 @@ divStyle =
 
 view model =
     let
-        dropId : Maybe dropId
+        dropId : Maybe Position
         dropId =
             DragDrop.getDropId model.dragDrop
 
@@ -81,14 +81,14 @@ view model =
             DragDrop.getDroppablePosition model.dragDrop
     in
     div []
-        [ viewDiv Up model.data dropId position
-        , viewDiv Middle model.data dropId position
-        , viewDiv Down model.data dropId position
+        [ viewDiv Up model.data dropId position model.dragDrop
+        , viewDiv Middle model.data dropId position model.dragDrop
+        , viewDiv Down model.data dropId position model.dragDrop
         ]
 
 
-viewDiv : Position -> { count : Int, position : Position } -> Maybe Position -> Maybe DragDrop.Position -> Html Msg
-viewDiv position data dropId maybeDroppablePosition =
+viewDiv : Position -> { count : Int, position : Position } -> Maybe Position -> Maybe DragDrop.Position -> DragDrop.Model Int Position -> Html Msg
+viewDiv position data dropId maybeDroppablePosition dragDrop =
     let
         highlight : List (Html.Attribute Msg)
         highlight =
@@ -106,6 +106,16 @@ viewDiv position data dropId maybeDroppablePosition =
 
             else
                 []
+
+        cursorStyle =
+            if DragDrop.isDraggedOver dragDrop then
+                style "cursor" "move"
+
+            else if DragDrop.isDragging dragDrop then
+                style "cursor" "grabbing"
+
+            else
+                style "cursor" "grab"
     in
     div
         (divStyle
@@ -121,6 +131,7 @@ viewDiv position data dropId maybeDroppablePosition =
             [ img
                 (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg"
                     :: width 100
+                    :: cursorStyle
                     :: DragDrop.draggable DragDropMsg data.count
                 )
                 []
