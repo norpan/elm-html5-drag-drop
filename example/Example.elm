@@ -71,28 +71,23 @@ divStyle =
 
 
 view model =
-    let
-        dropId : Maybe Position
-        dropId =
-            DragDrop.getDropId model.dragDrop
-
-        position : Maybe DragDrop.Position
-        position =
-            DragDrop.getDroppablePosition model.dragDrop
-    in
     div []
-        [ viewDiv Up model.data dropId position model.dragDrop
-        , viewDiv Middle model.data dropId position model.dragDrop
-        , viewDiv Down model.data dropId position model.dragDrop
+        [ viewDiv Up model.data model.dragDrop
+        , viewDiv Middle model.data model.dragDrop
+        , viewDiv Down model.data model.dragDrop
         ]
 
 
-viewDiv : Position -> { count : Int, position : Position } -> Maybe Position -> Maybe DragDrop.Position -> DragDrop.Model Int Position -> Html Msg
-viewDiv position data dropId maybeDroppablePosition dragDrop =
+viewDiv : Position -> { count : Int, position : Position } -> DragDrop.Model Int Position -> Html Msg
+viewDiv position data dragDrop =
     let
+        maybeDropId : Maybe Position
+        maybeDropId =
+            DragDrop.getDropId dragDrop
+
         highlight : List (Html.Attribute Msg)
         highlight =
-            if dropId |> Maybe.map ((==) position) |> Maybe.withDefault False then
+            if maybeDropId |> Maybe.map ((==) position) |> Maybe.withDefault False then
                 case maybeDroppablePosition of
                     Nothing ->
                         []
@@ -106,6 +101,10 @@ viewDiv position data dropId maybeDroppablePosition dragDrop =
 
             else
                 []
+
+        maybeDroppablePosition : Maybe DragDrop.Position
+        maybeDroppablePosition =
+            DragDrop.getDroppablePosition dragDrop
 
         cursorStyle =
             if DragDrop.isDraggedOver dragDrop then
