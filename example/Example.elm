@@ -3,6 +3,7 @@ port module Example exposing (Model, Msg(..), Position(..), divStyle, init, main
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Attributes.Extra
 import Html5.DragDrop as DragDrop
 import Json.Decode exposing (Value)
 
@@ -70,11 +71,29 @@ divStyle =
     ]
 
 
+view : Model -> Html Msg
 view model =
-    div []
-        [ viewDiv Up model.data model.dragDrop
-        , viewDiv Middle model.data model.dragDrop
-        , viewDiv Down model.data model.dragDrop
+    let
+        widthAttributes =
+            [ style "min-width" "30vw", style "max-width" "90vw", style "display" "flex", style "flex-direction" "column" ]
+
+        attributes =
+            -- While we are dragging we can set the cursor on the parent div.
+            if DragDrop.isDraggedOver model.dragDrop then
+                style "cursor" "move" :: widthAttributes
+
+            else if DragDrop.isDragging model.dragDrop then
+                style "cursor" "grabbing" :: widthAttributes
+
+            else
+                widthAttributes
+    in
+    div [ style "display" "flex", style "justify-content" "center" ]
+        [ div attributes
+            [ viewDiv Up model.data model.dragDrop
+            , viewDiv Middle model.data model.dragDrop
+            , viewDiv Down model.data model.dragDrop
+            ]
         ]
 
 
@@ -107,11 +126,12 @@ viewDiv position data dragDrop =
             DragDrop.getDroppablePosition dragDrop
 
         cursorStyle =
+            -- While we are dragging the cursor is set on the parent div.
             if DragDrop.isDraggedOver dragDrop then
-                style "cursor" "move"
+                Html.Attributes.Extra.empty
 
             else if DragDrop.isDragging dragDrop then
-                style "cursor" "grabbing"
+                Html.Attributes.Extra.empty
 
             else
                 style "cursor" "grab"
