@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "elm-tooling": "^1.15.0"
+    "elm-tooling": "^1.15.0",
+    "elm-watch": "^1.1.2"
   }
 }
