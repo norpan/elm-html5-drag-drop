@@ -90,7 +90,7 @@ view model =
 viewDiv : Position -> { count : Int, position : Position } -> Maybe Position -> Maybe DragDrop.Position -> Html Msg
 viewDiv position data dropId maybeDroppablePosition =
     let
-        highlight : List a
+        highlight : List (Html.Attribute Msg)
         highlight =
             if dropId |> Maybe.map ((==) position) |> Maybe.withDefault False then
                 case maybeDroppablePosition of
