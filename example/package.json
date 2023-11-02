@@ -1,0 +1,14 @@
+{
+  "name": "elm-html5-drag-drop-example",
+  "version": "1.0.0",
+  "description": "And example of using the elm-html5-drag-drop library",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "elm-tooling": "^1.15.0"
+  }
+}

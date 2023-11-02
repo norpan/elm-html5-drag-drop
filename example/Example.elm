@@ -1,4 +1,4 @@
-port module Example exposing (Model, Msg(..), Position(..), divStyle, init, isNothing, main, update, view, viewDiv)
+port module Example exposing (Model, Msg(..), Position(..), divStyle, init, main, update, view, viewDiv)
 
 import Browser
 import Html exposing (..)
@@ -26,6 +26,7 @@ type Msg
     = DragDropMsg (DragDrop.Msg Int Position)
 
 
+init : () -> ( Model, Cmd Msg )
 init () =
     ( { data = { count = 0, position = Up }
       , dragDrop = DragDrop.init
@@ -34,6 +35,7 @@ init () =
     )
 
 
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         DragDropMsg msg_ ->
@@ -57,7 +59,7 @@ update msg model =
             )
 
 
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -70,9 +72,11 @@ divStyle =
 
 view model =
     let
+        dropId : Maybe dropId
         dropId =
             DragDrop.getDropId model.dragDrop
 
+        position : Maybe DragDrop.Position
         position =
             DragDrop.getDroppablePosition model.dragDrop
     in
@@ -83,20 +87,13 @@ view model =
         ]
 
 
-isNothing maybe =
-    case maybe of
-        Just _ ->
-            False
-
-        Nothing ->
-            True
-
-
-viewDiv position data dropId droppablePosition =
+viewDiv : Position -> { count : Int, position : Position } -> Maybe Position -> Maybe DragDrop.Position -> Html Msg
+viewDiv position data dropId maybeDroppablePosition =
     let
+        highlight : List a
         highlight =
             if dropId |> Maybe.map ((==) position) |> Maybe.withDefault False then
-                case droppablePosition of
+                case maybeDroppablePosition of
                     Nothing ->
                         []
 
@@ -121,7 +118,12 @@ viewDiv position data dropId droppablePosition =
                )
         )
         (if data.position == position then
-            [ img (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
+            [ img
+                (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg"
+                    :: width 100
+                    :: DragDrop.draggable DragDropMsg data.count
+                )
+                []
             , text (String.fromInt data.count)
             ]
 
