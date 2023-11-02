@@ -58,6 +58,6 @@ https://github.com/norpan/elm-html5-drag-drop/blob/master/example/Example.elm
 cd example
 npm install
 npx elm-tooling install
-npx elm make --output=main.js Example.elm
+npx npx elm-watch hot
 open index.html
 ```
