@@ -1,8 +1,9 @@
-port module Example exposing (Model, Msg(..), Position(..), divStyle, init, isNothing, main, update, view, viewDiv)
+port module Example exposing (Model, Msg(..), Position(..), divStyle, init, main, update, view, viewDiv)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Attributes.Extra
 import Html5.DragDrop as DragDrop
 import Json.Decode exposing (Value)
 
@@ -26,6 +27,7 @@ type Msg
     = DragDropMsg (DragDrop.Msg Int Position)
 
 
+init : () -> ( Model, Cmd Msg )
 init () =
     ( { data = { count = 0, position = Up }
       , dragDrop = DragDrop.init
@@ -34,6 +36,7 @@ init () =
     )
 
 
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         DragDropMsg msg_ ->
@@ -57,7 +60,7 @@ update msg model =
             )
 
 
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
@@ -68,35 +71,43 @@ divStyle =
     ]
 
 
+view : Model -> Html Msg
 view model =
     let
-        dropId =
-            DragDrop.getDropId model.dragDrop
+        widthAttributes =
+            [ style "min-width" "30vw", style "max-width" "90vw", style "display" "flex", style "flex-direction" "column" ]
 
-        position =
-            DragDrop.getDroppablePosition model.dragDrop
+        attributes =
+            -- While we are dragging we can set the cursor on the parent div.
+            if DragDrop.isDraggedOver model.dragDrop then
+                style "cursor" "move" :: widthAttributes
+
+            else if DragDrop.isDragging model.dragDrop then
+                style "cursor" "grabbing" :: widthAttributes
+
+            else
+                widthAttributes
     in
-    div []
-        [ viewDiv Up model.data dropId position
-        , viewDiv Middle model.data dropId position
-        , viewDiv Down model.data dropId position
+    div [ style "display" "flex", style "justify-content" "center" ]
+        [ div attributes
+            [ viewDiv Up model.data model.dragDrop
+            , viewDiv Middle model.data model.dragDrop
+            , viewDiv Down model.data model.dragDrop
+            ]
         ]
 
 
-isNothing maybe =
-    case maybe of
-        Just _ ->
-            False
-
-        Nothing ->
-            True
-
-
-viewDiv position data dropId droppablePosition =
+viewDiv : Position -> { count : Int, position : Position } -> DragDrop.Model Int Position -> Html Msg
+viewDiv position data dragDrop =
     let
+        maybeDropId : Maybe Position
+        maybeDropId =
+            DragDrop.getDropId dragDrop
+
+        highlight : List (Html.Attribute Msg)
         highlight =
-            if dropId |> Maybe.map ((==) position) |> Maybe.withDefault False then
-                case droppablePosition of
+            if maybeDropId |> Maybe.map ((==) position) |> Maybe.withDefault False then
+                case maybeDroppablePosition of
                     Nothing ->
                         []
 
@@ -109,6 +120,21 @@ viewDiv position data dropId droppablePosition =
 
             else
                 []
+
+        maybeDroppablePosition : Maybe DragDrop.Position
+        maybeDroppablePosition =
+            DragDrop.getDroppablePosition dragDrop
+
+        cursorStyle =
+            -- While we are dragging the cursor is set on the parent div.
+            if DragDrop.isDraggedOver dragDrop then
+                Html.Attributes.Extra.empty
+
+            else if DragDrop.isDragging dragDrop then
+                Html.Attributes.Extra.empty
+
+            else
+                style "cursor" "grab"
     in
     div
         (divStyle
@@ -121,7 +147,13 @@ viewDiv position data dropId droppablePosition =
                )
         )
         (if data.position == position then
-            [ img (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg" :: width 100 :: DragDrop.draggable DragDropMsg data.count) []
+            [ img
+                (src "https://upload.wikimedia.org/wikipedia/commons/f/f3/Elm_logo.svg"
+                    :: width 100
+                    :: cursorStyle
+                    :: DragDrop.draggable DragDropMsg data.count
+                )
+                []
             , text (String.fromInt data.count)
             ]
 

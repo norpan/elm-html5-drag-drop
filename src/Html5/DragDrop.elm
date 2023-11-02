@@ -3,6 +3,7 @@ module Html5.DragDrop exposing
     , draggable, droppable
     , getDragId, getDropId, getDroppablePosition
     , getDragstartEvent
+    , isDraggedOver, isDragging
     )
 
 {-| This library handles dragging and dropping using the API
@@ -92,7 +93,7 @@ type alias Position =
 
 {-| The initial drag and drop state.
 
-You should use this as the initital value for the drag and drop state in your model.
+You should use this as the initial value for the drag and drop state in your model.
 
 -}
 init : Model dragId dropId
@@ -352,3 +353,13 @@ onWithOptions name { stopPropagation, preventDefault } decoder =
     decoder
         |> Json.map (\msg -> { message = msg, stopPropagation = stopPropagation, preventDefault = preventDefault })
         |> custom name
+
+
+isDragging : Model dragId dropId -> Bool
+isDragging model =
+    getDragId model /= Nothing && getDropId model == Nothing
+
+
+isDraggedOver : Model dragId dropId -> Bool
+isDraggedOver model =
+    getDragId model /= Nothing && getDropId model /= Nothing
